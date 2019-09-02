@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sauron</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="../js/bootstrap.min.js"></script>
+
+</head>
+<body class="bg-dark">
+<div id="container" class="container-fluid">
+    <img src="/video" class="img-fluid mx-auto d-block m-2" alt="Responsive image">
+
+    <div class="text-center">
+        <button id="up" class="btn btn-lg btn-primary m-2">up</button>
+    </div>
+    <div class="text-center">
+        <button id='left' class="btn btn-lg btn-primary m-2">left</button>
+        <button id='down' class="btn btn-lg btn-primary m-2">down</button>
+        <button id='right' class="btn btn-lg btn-primary m-2">right</button>
+    </div>
+</div>
+</body>
+<script>
+    function postData(url = '', data = {}) {
+        return fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+        })
+    }
+
+    var interval;
+
+    ['up', 'down', 'left', 'right'].map(function (elem) {
+        document.getElementById(elem).onmousedown = function () {
+            if (interval) clearInterval(interval);
+            interval = setInterval(function () {
+                postData('', {action: elem});
+            }, 64)
+        };
+        document.getElementById(elem).onmouseup = function () {
+            if (interval) clearInterval(interval);
+        };
+    });
+
+</script>
+</html>
