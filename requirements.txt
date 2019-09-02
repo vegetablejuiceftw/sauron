@@ -1,0 +1,5 @@
+flask
+numpy
+# opencv-python
+zeroless
+pydantic[ujson]

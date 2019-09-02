@@ -102,3 +102,17 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Ignore everything in .idea
+.idea
+
+*.mo
+*.pyo
+*.pyc
+.DS_Store
+node_modules/
+venv/
+
+.cache/
+
+.data*/
