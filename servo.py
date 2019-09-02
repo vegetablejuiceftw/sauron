@@ -41,15 +41,15 @@ class Servo(Thread):
             self.turn += delta.dx
             self.tilt += delta.dy
             self.normalize()
-            print("received servo", self.turn, self.tilt)
+            print("received servo %.1f %.1f" % (self.turn, self.tilt))
         else:
             print("failed", topic)
 
     def normalize(self):
         self.turn = max(0., min(self.turn, 180.))
         self.tilt = max(0., min(self.tilt, 180.))
-        self.current_turn = max(0., min(self.current_turn, 180.))
-        self.current_tilt = max(0., min(self.current_tilt, 180.))
+        self.current_turn = int(max(0., min(self.current_turn, 180.)))
+        self.current_tilt = int(max(0., min(self.current_tilt, 180.)))
 
     def apply(self):
         self.pwm_start()

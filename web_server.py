@@ -1,3 +1,7 @@
+from gevent import monkey
+
+monkey.patch_all(thread=False)
+
 from time import sleep, time
 
 import SharedArray as sa
@@ -40,8 +44,11 @@ def generator():
     frame = sa.attach("shm://camera")
     current = frame.copy()
 
+    fails = 0
+
     while True:
         if not np.array_equal(current, frame):
+            fails = 0
             current = frame.copy()
             last_detection = detection_sub.messages.get(Topics.detection)
             if last_detection:
@@ -59,8 +66,9 @@ def generator():
                     )
             ret, jpg = cv.imencode('.jpg', current, (cv.IMWRITE_JPEG_QUALITY, 60))
             yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpg.tostring() + b'\r\n')
-
-        sleep(0.032)
+        else:
+            fails += 1
+        sleep(0.032 if fails < 5 else 1)
 
 
 @app.route('/video')
@@ -72,4 +80,7 @@ def video_feed():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, use_reloader=False, threaded=True)
+    from gevent import pywsgi
+
+    server = pywsgi.WSGIServer(('0.0.0.0', 5000), app)
+    server.serve_forever()

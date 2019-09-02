@@ -2,6 +2,7 @@ from threading import Thread
 from time import time
 from typing import List
 
+import settings
 from pubsub import CallbackListener, get_listener, Topics, Ports, Detection, DetectionPosition, get_server, Delta
 
 
@@ -39,8 +40,8 @@ class Autonomous(Thread):
             # self.tilt -= tanh(dy / smooth) * speed
 
             # absolute mode
-            tilt = -25 * (dy)
-            turn = 50 * (dx)
+            tilt = -25 * dy
+            turn = 50 * dx
             print()
             print('do autonomus %.2f %.2f -> [%.2f %.2f]' % (dx, dy, tilt, turn))
             self.last_detect = time()
@@ -50,6 +51,6 @@ class Autonomous(Thread):
 
 
 if __name__ == '__main__':
-    driver = Autonomous()
+    driver = Autonomous(autonomous_timeout=settings.AUTO_TRACK_INERVAL)
     listener = get_listener(Ports.detection, Topics.detection)
     CallbackListener(listener, driver.handler, daemon=False)

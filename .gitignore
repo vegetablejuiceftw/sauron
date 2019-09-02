@@ -116,3 +116,5 @@ venv/
 .cache/
 
 .data*/
+
+settings.py
