@@ -11,6 +11,7 @@ class CameraOpenCV(Camera):
     def __init__(self, index: int = 0, half_broadcast: bool = False, **kwargs) -> None:
         super().__init__(**kwargs)
         self.grabber = cv.VideoCapture(index)
+        self.grabber.set(cv.CAP_PROP_FPS, settings.CAP_FPS)
         print("FPS:", self.grabber.get(cv.CAP_PROP_FPS))
         frame = self.grabber.read()[1]
         half = cv.resize(frame, (0, 0), fx=0.5, fy=0.5)

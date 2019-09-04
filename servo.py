@@ -1,9 +1,8 @@
 from threading import Thread
 from time import time, sleep
 
-from math import tanh
-
-from pubsub import CallbackListener, get_listener, Topics, Ports, Delta
+from messages import Delta
+from pubsub import Topics, TopicNames, CallbackListener
 
 
 class Servo(Thread):
@@ -32,12 +31,12 @@ class Servo(Thread):
         self.history = []
         self.max_history = 1
 
-        listener = get_listener(Ports.servo, [Topics.servo])
+        listener = Topics.start_listener(TopicNames.servo)
         self.callback_thread = CallbackListener(listener, self.handler, daemon=True)
 
     def handler(self, topic, message):
-        if topic == Topics.servo:
-            delta = Delta.parse_raw(message)
+        if topic == TopicNames.servo:
+            delta: Delta = message
             self.turn += delta.dx
             self.tilt += delta.dy
             self.normalize()

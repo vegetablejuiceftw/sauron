@@ -1,5 +1,7 @@
 from gevent import monkey
 
+from messages import DetectionPacket
+
 monkey.patch_all(thread=False)
 
 from time import sleep, time
@@ -9,12 +11,13 @@ import cv2 as cv
 from flask import Flask, render_template, Response, request
 import numpy as np
 
-from pubsub import Delta, get_server, Ports, Topics, get_listener, CallbackListener, Detection
+from pubsub import Delta, Topics, CallbackListener, Services, TopicNames
 
 app = Flask(__name__, static_folder='./', static_url_path='', template_folder='./templates')
 
-servo_server = get_server(port=Ports.servo[0], topics=[Topics.servo])
-detection_queue = get_listener(ports=Ports.detection, topics=[Topics.detection])
+servo_pub = Topics.start_service(Services.web_server)
+detection_queue = Topics.start_listener(TopicNames.detection)
+
 detection_sub = CallbackListener(detection_queue, daemon=True)
 
 
@@ -34,7 +37,7 @@ def index():
             turn -= speed
 
         packet = Delta(dx=turn, dy=tilt, time=time())
-        servo_server[Topics.servo](packet)
+        servo_pub[TopicNames.servo](packet)
         print(tilt, turn)
 
     return render_template('index.html')
@@ -50,11 +53,9 @@ def generator():
         if not np.array_equal(current, frame):
             fails = 0
             current = frame.copy()
-            last_detection = detection_sub.messages.get(Topics.detection)
+            last_detection: DetectionPacket = detection_sub.messages.get(TopicNames.detection)
             if last_detection:
-                detection = Detection.parse_raw(last_detection)
-
-                for face in detection.points:
+                for face in last_detection.points:
                     cv.rectangle(current, (face.x, face.y), (face.x + face.w, face.y + face.h), face.color, 2)
                     cv.putText(
                         current, '%d-%d   %.1f, %.1f' % (face.pid, face.age, face.dx, face.dy), (face.x, face.y - 8),

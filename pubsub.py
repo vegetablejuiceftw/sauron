@@ -1,88 +1,84 @@
 from threading import Thread
-from typing import Iterable, Callable, Dict, List
+from typing import Iterable, Callable, Dict, List, NamedTuple, Generator
 
-from pydantic import BaseModel
-from zeroless import (Server, Client)
+from zeroless import Server, Client
 
-
-class Ports:
-    detection = 12000,
-    servo = 12010, 12020
+from messages import DetectionPacket, Delta, BaseMessageType
 
 
-class Topics:
-    detection = "position"
+class TopicNames:
+    detection = "detection"
     servo = "servo"
 
 
-class Delta(BaseModel):
-    dx: float
-    dy: float
-    time: float = None
+class Services:
+    detector = 12000
+    web_server = 12010
+    autonomous = 12020
 
 
-class DetectionPosition(BaseModel):
-    x: int
-    y: int
-    w: int
-    h: int
-    sx: int
-    sy: int
-    id: int
-    pid: int
-    age: int
-    color: tuple
-    ms: float
-
-    @property
-    def cx(self):
-        return int(self.x + self.w / 2)
-
-    @property
-    def cy(self):
-        return int(self.y + self.h / 2)
-
-    @property
-    def dx(self):
-        return 0.5 - self.cx / self.sx
-
-    @property
-    def dy(self):
-        return 0.5 - self.cy / self.sy
-
-    @property
-    def key(self):
-        return abs(self.dx) + abs(self.dy)
-
-    def zoom(self, zoom):
-        return DetectionPosition(
-            x=int(self.x / zoom),
-            y=int(self.y / zoom),
-            w=int(self.w / zoom),
-            h=int(self.h / zoom),
-            sx=int(self.sx / zoom),
-            sy=int(self.sy / zoom),
-            id=self.id,
-            pid=self.pid,
-            age=self.age,
-            color=self.color,
-            ms=self.ms,
-        )
+class Channel(NamedTuple):
+    topic_name: str
+    ports: List[int]
+    packet: BaseMessageType
 
 
-class Detection(BaseModel):
-    points: List[DetectionPosition]
+class Topics:
+    channels = [
+        Channel("detection", [Services.detector], DetectionPacket),
+        Channel("servo", [Services.web_server, Services.autonomous], Delta),
+    ]
+
+    mapping = {c.topic_name: c for c in channels}
+
+    services = set(service for c in channels for service in c.ports)
+
+    @classmethod
+    def get_service_topics(cls, service_port: int):
+        return [c.topic_name for c in cls.channels if service_port in c.ports]
+
+    @classmethod
+    def start_service(cls, service_port: int):
+        return get_server(port=service_port, topics=cls.get_service_topics(service_port))
+
+    @classmethod
+    def start_listener(cls, *topics: str):
+        channels = [channel for channel in cls.channels if channel.topic_name in topics]
+        return get_listener(*channels)
 
 
-def get_listener(ports: list, topics: list) -> Iterable:
+def get_mapped_stream(client, *channels: Channel) -> Generator[BaseMessageType, None, None]:
+    topic_mapping: Dict[str, BaseMessageType] = {channel.topic_name: channel.packet for channel in channels}
+
+    stream: Iterable = client.sub(topics=[t.encode('utf-8') for t in topic_mapping.keys()])
+
+    for values in stream:
+        # malformed message
+        if len(values) != 2:
+            continue
+
+        topic, raw_msg = values
+
+        topic_name: str = topic.decode()
+        message = topic_mapping.get(topic_name)
+        if message:
+            try:
+                yield topic_name, message.parse_raw(raw_msg)
+            except Exception as e:
+                print(f"Failed topic {topic_name} -> {message}, '{raw_msg}'", e)
+
+
+def get_listener(*channels: Channel):
     # Connects the client to as many servers as desired
     client = Client()
+
+    # connect to all ports
+    ports = sum([channel.ports for channel in channels], [])
     for port in ports:
         client.connect_local(port=port)
 
     # Assigns an iterable to wait for incoming messages with the topics
-    listen_for_pub = client.sub(topics=[t.encode('utf-8') for t in topics])
-    return listen_for_pub
+    return get_mapped_stream(client, *channels)
 
 
 class CallbackListener(Thread):
@@ -92,20 +88,16 @@ class CallbackListener(Thread):
         self.generator = generator
         self.callback = callback
         self.start()
-        self.messages = {}
+        self.messages: Dict[str, BaseMessageType] = {}
 
     def run(self) -> None:
         for values in self.generator:
-            if len(values) == 2:
-                topic, msg = values
-                topic = topic.decode()
-                self.messages[topic] = msg
-                self.callback and self.callback(topic, msg)
-            else:
-                print("whut the heck", values)
+            topic, msg = values
+            self.messages[topic] = msg
+            self.callback and self.callback(topic, msg)
 
 
-def get_server(port: int, topics: List[str]) -> Dict[str, Callable]:
+def get_server(port: int, topics: List[str]) -> Dict[str, Callable[[BaseMessageType], None]]:
     # And assigns a callable to publish messages with the topics'
     srv = Server(port=port)
 

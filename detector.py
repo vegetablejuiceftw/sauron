@@ -5,7 +5,8 @@ import cv2 as cv
 
 from face_dnn.dnn_detector import DNNProcessor
 from haar_cascades import cascade_detector
-from pubsub import DetectionPosition, get_server, Ports, Topics, Detection
+from messages import DetectionPosition, DetectionPacket
+from pubsub import Topics, Services, TopicNames
 from shared import ImageSubscriber
 
 
@@ -20,7 +21,7 @@ class Detector:
         self.preserve = 0
         self.haar_processor = cascade_detector.CascadeProcessor(cascade_detector.Topics.face)
         self.dnn_processor = DNNProcessor()
-        self.detection_pub = get_server(port=Ports.detection[0], topics=[Topics.detection])
+        self.detection_pub = Topics.start_service(Services.detector)
 
     def grab(self, image, ms):
         self.raw = image
@@ -31,7 +32,7 @@ class Detector:
         if detection or self.preserve == 3:
             self.detection = detection
             self.preserve = 0
-            self.detection_pub[Topics.detection](Detection(points=self.detection))
+            self.detection_pub[TopicNames.detection](DetectionPacket(points=self.detection))
 
     def detect(self, frame, zoom) -> List[DetectionPosition]:
         # measure processing the lazy way

@@ -3,7 +3,8 @@ from time import time
 from typing import List
 
 import settings
-from pubsub import CallbackListener, get_listener, Topics, Ports, Detection, DetectionPosition, get_server, Delta
+from messages import DetectionPacket, DetectionPosition, Delta
+from pubsub import Topics, Services, CallbackListener, TopicNames
 
 
 class Autonomous(Thread):
@@ -14,12 +15,13 @@ class Autonomous(Thread):
         self.last_detect = time()
         self.last_id = None
 
-        self.publisher = get_server(port=Ports.servo[1], topics=[Topics.servo])
+        self.publisher = Topics.start_service(Services.autonomous)
+        listener = Topics.start_listener(TopicNames.detection)
+        self.worker = CallbackListener(listener, self.handler, daemon=False)
 
     def handler(self, topic, message):
-        if topic == Topics.detection:
-            detection = Detection.parse_raw(message)
-            print("received detection", len(detection.points))
+        if topic == TopicNames.detection:
+            detection: DetectionPacket = message
             self.logic(detection.points)
         else:
             print("failed", topic)
@@ -42,15 +44,12 @@ class Autonomous(Thread):
             # absolute mode
             tilt = -25 * dy
             turn = 50 * dx
-            print()
-            print('do autonomus %.2f %.2f -> [%.2f %.2f]' % (dx, dy, tilt, turn))
+            print('auto tracking %.2f %.2f -> [%.2f %.2f]' % (dx, dy, tilt, turn))
             self.last_detect = time()
 
             packet = Delta(dx=turn, dy=tilt, time=time())
-            self.publisher[Topics.servo](packet)
+            self.publisher[TopicNames.servo](packet)
 
 
 if __name__ == '__main__':
-    driver = Autonomous(autonomous_timeout=settings.AUTO_TRACK_INERVAL)
-    listener = get_listener(Ports.detection, Topics.detection)
-    CallbackListener(listener, driver.handler, daemon=False)
+    Autonomous(autonomous_timeout=settings.AUTO_TRACK_INERVAL)

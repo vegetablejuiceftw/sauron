@@ -1,6 +1,8 @@
 flask
 numpy
-# opencv-python
+# opencv-python3
+opencv-contrib-python
 zeroless
 pydantic[ujson]
 gevent
+sharedarray
