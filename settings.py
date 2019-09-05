@@ -1,4 +1,53 @@
-AUTO_TRACK_INERVAL = 0.7
-HALF_CAMERA_BROADCAST = False
+SERVO_TIMEOUT = 20.0
 
-CAP_FPS = 60
+CONFIG = dict(
+    default=[
+        dict(
+            descriptor='camera_opencv:CameraOpenCV',
+            index=0,
+            half_broadcast=False,
+            camera_sleep=0.029,
+            cap_fps=60,
+        ),
+        dict(
+            descriptor='web_server:launch',
+        ),
+        dict(
+            descriptor='detector:Detector',
+            zoom=1,
+        ),
+        dict(
+            descriptor='autonomous:Autonomous',
+            autonomous_timeout=1.0,
+        ),
+        dict(
+            descriptor='servo:Servo',
+            timeout=SERVO_TIMEOUT,
+        ),
+    ],
+    raspberry=[
+        dict(
+            # probably other camera provider
+            descriptor='camera_opencv:CameraOpenCV',
+            index=0,
+            half_broadcast=False,
+            camera_sleep=0.029,
+            cap_fps=30,
+        ),
+        dict(
+            descriptor='web_server:launch',
+        ),
+        dict(
+            descriptor='detector:Detector',
+            zoom=1,
+        ),
+        dict(
+            descriptor='autonomous:Autonomous',
+            autonomous_timeout=1.0,
+        ),
+        dict(
+            descriptor='servo:Servo',
+            timeout=SERVO_TIMEOUT,
+        ),
+    ],
+)

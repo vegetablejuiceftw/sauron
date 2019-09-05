@@ -55,6 +55,7 @@ def get_mapped_stream(client, *channels: Channel) -> Generator[BaseMessageType, 
     for values in stream:
         # malformed message
         if len(values) != 2:
+            print("malformed package", values)
             continue
 
         topic, raw_msg = values
@@ -83,12 +84,14 @@ def get_listener(*channels: Channel):
 
 class CallbackListener(Thread):
 
-    def __init__(self, generator, callback=None, daemon=True, **kwargs) -> None:
+    def __init__(self, generator, callback=None, daemon=True, run=True, **kwargs) -> None:
         Thread.__init__(self, daemon=daemon, **kwargs)
         self.generator = generator
         self.callback = callback
-        self.start()
         self.messages: Dict[str, BaseMessageType] = {}
+
+        if run:
+            self.start()
 
     def run(self) -> None:
         for values in self.generator:

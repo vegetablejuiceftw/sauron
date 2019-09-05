@@ -7,7 +7,7 @@ from pubsub import Topics, TopicNames, CallbackListener
 
 class Servo(Thread):
 
-    def __init__(self, timeout: float = 20.0, **kwargs) -> None:
+    def __init__(self, timeout: float = 20.0, run=True, **kwargs) -> None:
         Thread.__init__(self, **kwargs)
 
         self.timeout = timeout
@@ -33,6 +33,9 @@ class Servo(Thread):
 
         listener = Topics.start_listener(TopicNames.servo)
         self.callback_thread = CallbackListener(listener, self.handler, daemon=True)
+
+        if run:
+            self.start()
 
     def handler(self, topic, message):
         if topic == TopicNames.servo:
@@ -108,4 +111,3 @@ class Servo(Thread):
 
 if __name__ == '__main__':
     servo = Servo()
-    servo.start()

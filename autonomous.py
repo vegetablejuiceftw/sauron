@@ -2,14 +2,13 @@ from threading import Thread
 from time import time
 from typing import List
 
-import settings
 from messages import DetectionPacket, DetectionPosition, Delta
 from pubsub import Topics, Services, CallbackListener, TopicNames
 
 
 class Autonomous(Thread):
 
-    def __init__(self, autonomous_timeout: float = 1.0, **kwargs) -> None:
+    def __init__(self, autonomous_timeout: float = 1.0, run=True, **kwargs) -> None:
         Thread.__init__(self, **kwargs)
         self.autonomous_timeout = autonomous_timeout
         self.last_detect = time()
@@ -18,6 +17,8 @@ class Autonomous(Thread):
         self.publisher = Topics.start_service(Services.autonomous)
         listener = Topics.start_listener(TopicNames.detection)
         self.worker = CallbackListener(listener, self.handler, daemon=False)
+        if run:
+            self.start()
 
     def handler(self, topic, message):
         if topic == TopicNames.detection:
@@ -52,4 +53,4 @@ class Autonomous(Thread):
 
 
 if __name__ == '__main__':
-    Autonomous(autonomous_timeout=settings.AUTO_TRACK_INERVAL)
+    Autonomous()

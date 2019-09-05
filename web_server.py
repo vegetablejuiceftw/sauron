@@ -18,7 +18,7 @@ app = Flask(__name__, static_folder='./', static_url_path='', template_folder='.
 servo_pub = Topics.start_service(Services.web_server)
 detection_queue = Topics.start_listener(TopicNames.detection)
 
-detection_sub = CallbackListener(detection_queue, daemon=True)
+detection_sub = CallbackListener(detection_queue, daemon=True, run=False)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -53,8 +53,9 @@ def generator():
         if not np.array_equal(current, frame):
             fails = 0
             current = frame.copy()
-            last_detection: DetectionPacket = detection_sub.messages.get(TopicNames.detection)
-            if last_detection:
+            if TopicNames.detection in detection_sub.messages:
+                last_detection: DetectionPacket = detection_sub.messages[TopicNames.detection]
+
                 for face in last_detection.points:
                     cv.rectangle(current, (face.x, face.y), (face.x + face.w, face.y + face.h), face.color, 2)
                     cv.putText(
@@ -80,8 +81,13 @@ def video_feed():
         return Response('camera not online', 404)
 
 
-if __name__ == '__main__':
+def launch(*args, **kwargs):
     from gevent import pywsgi
 
+    detection_sub.start()
     server = pywsgi.WSGIServer(('0.0.0.0', 5000), app)
     server.serve_forever()
+
+
+if __name__ == '__main__':
+    launch()

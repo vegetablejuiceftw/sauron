@@ -11,7 +11,7 @@ from shared import ImageSubscriber
 
 
 class Detector:
-    def __init__(self, zoom: float = 1.00, **kwargs) -> None:
+    def __init__(self, zoom: float = 1.00, run=True, **kwargs) -> None:
         self.kwargs = kwargs
         self.zoom = zoom
         self.raw = None
@@ -22,6 +22,11 @@ class Detector:
         self.haar_processor = cascade_detector.CascadeProcessor(cascade_detector.Topics.face)
         self.dnn_processor = DNNProcessor()
         self.detection_pub = Topics.start_service(Services.detector)
+        self.worker = ImageSubscriber('shm://camera', self.grab)
+
+        if run:
+            print("start detector")
+            self.worker.start()
 
     def grab(self, image, ms):
         self.raw = image
@@ -118,8 +123,7 @@ class Detector:
 
 
 if __name__ == '__main__':
-    face_detector = Detector(zoom=1)
-    ImageSubscriber('shm://camera', face_detector.grab).start()
+    face_detector = Detector()
 
     # cap = cv.VideoCapture(0)
     # while cap.isOpened:
