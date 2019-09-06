@@ -50,4 +50,21 @@ CONFIG = dict(
             timeout=SERVO_TIMEOUT,
         ),
     ],
+    image_only=[
+        dict(
+            descriptor='camera_opencv:CameraOpenCV',
+            index=0,
+            half_broadcast=False,
+            camera_sleep=0.013,
+            cap_fps=60,
+        ),
+        dict(
+            descriptor='asgi_web_server:launch',
+            workers=1,
+        ),
+        dict(
+            descriptor='detector:Detector',
+            zoom=1,
+        ),
+    ],
 )

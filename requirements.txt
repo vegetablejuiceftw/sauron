@@ -6,3 +6,7 @@ zeroless
 pydantic[ujson]
 gevent
 sharedarray
+starlette
+uvicorn
+aiofiles
+jinja2

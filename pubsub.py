@@ -1,3 +1,4 @@
+from random import randint
 from threading import Thread
 from typing import Iterable, Callable, Dict, List, NamedTuple, Generator
 
@@ -89,12 +90,16 @@ class CallbackListener(Thread):
         self.generator = generator
         self.callback = callback
         self.messages: Dict[str, BaseMessageType] = {}
-
+        self.running = True
+        self.id = randint(0, 1000000)
         if run:
             self.start()
 
     def run(self) -> None:
         for values in self.generator:
+            if not self.running:
+                print("closing callback listener", self.id)
+                break
             topic, msg = values
             self.messages[topic] = msg
             self.callback and self.callback(topic, msg)
