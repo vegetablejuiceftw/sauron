@@ -7,7 +7,7 @@ from shared import get_image_publisher
 
 class CameraOpenCV(Camera):
 
-    def __init__(self, index: int = 0, half_broadcast: bool = False, cap_fps: int = 60, run=True, **kwargs) -> None:
+    def __init__(self, index: int = 0, half_broadcast: bool = False, cap_fps: int = 59, run=True, **kwargs) -> None:
         super().__init__(**kwargs)
         self.grabber = cv.VideoCapture(index)
         self.grabber.set(cv.CAP_PROP_FPS, cap_fps)

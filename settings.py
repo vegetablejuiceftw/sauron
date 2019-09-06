@@ -6,8 +6,8 @@ CONFIG = dict(
             descriptor='camera_opencv:CameraOpenCV',
             index=0,
             half_broadcast=False,
-            camera_sleep=0.029,
-            cap_fps=60,
+            camera_sleep=0.013,
+            cap_fps=59,
         ),
         dict(
             descriptor='web_server:launch',
@@ -55,8 +55,8 @@ CONFIG = dict(
             descriptor='camera_opencv:CameraOpenCV',
             index=0,
             half_broadcast=False,
-            camera_sleep=0.013,
-            cap_fps=60,
+            camera_sleep=0.016,
+            cap_fps=59,
         ),
         dict(
             descriptor='asgi_web_server:launch',
