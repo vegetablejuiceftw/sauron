@@ -1,56 +1,76 @@
-from gevent import monkey
-
-from messages import DetectionPacket
-
-monkey.patch_all(thread=False)
-
-from time import sleep, time
-
+import asyncio
+import uvicorn
+from time import time
 import SharedArray as sa
 import cv2 as cv
-from flask import Flask, render_template, Response, request
 import numpy as np
 
+from starlette.applications import Starlette
+from starlette.staticfiles import StaticFiles
+from starlette.responses import Response, StreamingResponse, JSONResponse
+from starlette.templating import Jinja2Templates
+
+from messages import DetectionPacket
 from pubsub import Delta, Topics, CallbackListener, Services, TopicNames
 
-app = Flask(__name__, static_folder='./', static_url_path='', template_folder='./templates')
+templates = Jinja2Templates(directory='templates')
 
-servo_pub = Topics.start_service(Services.web_server)
-detection_queue = Topics.start_listener(TopicNames.detection)
+app = Starlette(debug=True)
+app.mount('/static', StaticFiles(directory='static'), name='static')
 
-detection_sub = CallbackListener(detection_queue, daemon=True, run=False)
+servo_pub = None
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+# TODO: replace this with websockets
+@app.route('/servo', methods=['POST'])
+async def servo(request):
     speed = 2.0
     tilt, turn = 0, 0
-    if request.json:
-        action = request.json['action']
-        if action == 'up':
-            tilt -= speed
-        if action == 'down':
-            tilt += speed
-        if action == 'left':
-            turn += speed
-        if action == 'right':
-            turn -= speed
+    json = await request.json()
 
-        packet = Delta(dx=turn, dy=tilt, time=time())
-        servo_pub[TopicNames.servo](packet)
-        print(tilt, turn)
+    action = json['action']
+    if action == 'up':
+        tilt -= speed
+    if action == 'down':
+        tilt += speed
+    if action == 'left':
+        turn += speed
+    if action == 'right':
+        turn -= speed
 
-    return render_template('index.html')
+    packet = Delta(dx=turn, dy=tilt, time=time())
+    servo_pub[TopicNames.servo](packet)
+    print(json, tilt, turn)
+    return JSONResponse({})
 
 
-def generator():
+@app.route('/')
+async def homepage(request):
+    template = "index.html"
+    context = {"request": request}
+    return templates.TemplateResponse(template, context)
+
+
+async def generator(request):
     frame = sa.attach("shm://camera")
     current = frame.copy()
+
+    detection_queue = Topics.start_listener(TopicNames.detection)
+    detection_sub = CallbackListener(detection_queue, daemon=True, run=True)
 
     fails = 0
 
     while True:
+        # oh boy : D, web dev is so eezy
+        # https://github.com/encode/starlette/pull/320
+        # https://github.com/encode/starlette/issues/297
+        # https://github.com/tiangolo/fastapi/issues/410
+        if await request.is_disconnected():
+            print("video stream disconnected : D")
+            detection_sub.running = False
+            break
         if not np.array_equal(current, frame):
+            # print("frame")
             fails = 0
             current = frame.copy()
             if TopicNames.detection in detection_sub.messages:
@@ -70,23 +90,28 @@ def generator():
             yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpg.tostring() + b'\r\n')
         else:
             fails += 1
-        sleep(0.032 if fails < 5 else 1)
+        await asyncio.sleep(0.032 if fails < 5 else 1)
 
 
 @app.route('/video')
-def video_feed():
+async def video_feed(request):
     if "camera" in [e.name.decode() for e in sa.list()]:
-        return Response(generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        return StreamingResponse(generator(request), media_type='multipart/x-mixed-replace; boundary=frame')
     else:
         return Response('camera not online', 404)
 
 
-def launch(*args, **kwargs):
-    from gevent import pywsgi
+def launch(*args, workers=1, **kwargs):
+    global servo_pub
 
-    detection_sub.start()
-    server = pywsgi.WSGIServer(('0.0.0.0', 5000), app)
-    server.serve_forever()
+    print("launching web server")
+    servo_pub = Topics.start_service(Services.web_server)
+    uvicorn.run(app, host='0.0.0.0', port=8000, workers=workers)
+
+
+@app.on_event('shutdown')
+def murder():
+    print("Murder! :O")
 
 
 if __name__ == '__main__':

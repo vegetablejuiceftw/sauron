@@ -10,7 +10,8 @@ CONFIG = dict(
             cap_fps=59,
         ),
         dict(
-            descriptor='asgi_web_server:launch',
+            descriptor='web_server:launch',
+            workers=1,
         ),
         dict(
             descriptor='detector:Detector',
@@ -37,6 +38,7 @@ CONFIG = dict(
         ),
         dict(
             descriptor='web_server:launch',
+            workers=1,
         ),
         dict(
             descriptor='detector:Detector',
@@ -61,7 +63,7 @@ CONFIG = dict(
             cap_fps=59,
         ),
         dict(
-            descriptor='asgi_web_server:launch',
+            descriptor='web_server:launch',
             workers=1,
         ),
         dict(
