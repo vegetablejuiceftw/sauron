@@ -102,10 +102,10 @@ class Detector:
                     ),
                 ]
 
-        points = self.haar_processor.process(frame, 0.5)
+        # haar detects candles and books as faces :(
+        # points = self.haar_processor.process(frame, 0.5)
 
-        if not points and self.count % 2 == 0:
-            points = self.dnn_processor.process(frame, 200)
+        points = self.dnn_processor.process(frame, 200)
 
         ms = (time() - start) * 1000
 

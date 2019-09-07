@@ -4,13 +4,13 @@ CONFIG = dict(
     default=[
         dict(
             descriptor='camera_opencv:CameraOpenCV',
-            index=0,
+            index=2,
             half_broadcast=False,
             camera_sleep=0.013,
             cap_fps=59,
         ),
         dict(
-            descriptor='web_server:launch',
+            descriptor='asgi_web_server:launch',
         ),
         dict(
             descriptor='detector:Detector',
@@ -18,11 +18,12 @@ CONFIG = dict(
         ),
         dict(
             descriptor='autonomous:Autonomous',
-            autonomous_timeout=1.0,
+            autonomous_timeout=0.70,
         ),
         dict(
             descriptor='servo:Servo',
             timeout=SERVO_TIMEOUT,
+            driver="arduino",
         ),
     ],
     raspberry=[
@@ -48,6 +49,7 @@ CONFIG = dict(
         dict(
             descriptor='servo:Servo',
             timeout=SERVO_TIMEOUT,
+            driver="arduion",  # could use the pan tilt hat, but it has power draw issues :/
         ),
     ],
     image_only=[

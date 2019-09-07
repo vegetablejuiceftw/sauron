@@ -7,18 +7,12 @@ from pubsub import Topics, TopicNames, CallbackListener
 
 class Servo(Thread):
 
-    def __init__(self, timeout: float = 20.0, run=True, **kwargs) -> None:
+    def __init__(self, driver: str = "arduino", timeout: float = 20.0, run=True, **kwargs) -> None:
         Thread.__init__(self, **kwargs)
 
         self.timeout = timeout
         self.last_update = time()
-
-        try:
-            from PCA9685 import PCA9685
-            self.pwm = PCA9685()
-            self.pwm.setPWMFreq(50)
-        except:
-            self.pwm = None
+        self.pwm = self.load_driver(driver)
 
         self.turn: float = 90
         self.tilt: float = 50
@@ -36,6 +30,22 @@ class Servo(Thread):
 
         if run:
             self.start()
+
+    @staticmethod
+    def load_driver(name):
+        if name == 'pan-tilt-hat':
+            # the pan tilt hat has power draw issues :/
+            try:
+                from PCA9685 import PCA9685
+                return PCA9685()
+            except:
+                pass
+        elif name == 'arduino':
+            try:
+                from driver_arduino import Controller
+                return Controller()
+            except:
+                pass
 
     def handler(self, topic, message):
         if topic == TopicNames.servo:
@@ -56,15 +66,14 @@ class Servo(Thread):
     def apply(self):
         self.pwm_start()
         self.normalize()
-        self.pwm and self.pwm.setRotationAngle(0, self.current_tilt)
-        self.pwm and self.pwm.setRotationAngle(1, self.current_turn)
+        self.pwm and self.pwm.set_angle(0, self.current_tilt)
+        self.pwm and self.pwm.set_angle(1, self.current_turn)
 
     def pwm_stop(self):
-        self.pwm and self.pwm.exit_PCA9685()
+        self.pwm and self.pwm.exit()
 
     def pwm_start(self):
-        self.pwm and self.pwm.start_PCA9685()
-        self.pwm and self.pwm.setPWMFreq(50)
+        self.pwm and self.pwm.start()
 
     def append_history(self, dx, dy):
         self.history.append((dx, dy))

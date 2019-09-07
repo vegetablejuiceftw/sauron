@@ -2,14 +2,14 @@ import asyncio
 
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import Response, StreamingResponse, JSONResponse
 from starlette.templating import Jinja2Templates
 
 import uvicorn
 
 from messages import DetectionPacket
 
-from time import sleep, time
+from time import time
 
 import SharedArray as sa
 import cv2 as cv
@@ -22,29 +22,30 @@ templates = Jinja2Templates(directory='templates')
 app = Starlette(debug=True)
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
+servo_pub = None
+
 
 # TODO: replace this with websockets
-# servo_pub = Topics.start_service(Services.web_server)
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     # speed = 2.0
-#     # tilt, turn = 0, 0
-#     # if request.json:
-#     #     action = request.json['action']
-#     #     if action == 'up':
-#     #         tilt -= speed
-#     #     if action == 'down':
-#     #         tilt += speed
-#     #     if action == 'left':
-#     #         turn += speed
-#     #     if action == 'right':
-#     #         turn -= speed
-#     #
-#     #     packet = Delta(dx=turn, dy=tilt, time=time())
-#     #     servo_pub[TopicNames.servo](packet)
-#     #     print(tilt, turn)
-#
-#     return render_template('index.html')
+@app.route('/servo', methods=['POST'])
+async def servo(request):
+    speed = 2.0
+    tilt, turn = 0, 0
+    json = await request.json()
+
+    action = json['action']
+    if action == 'up':
+        tilt -= speed
+    if action == 'down':
+        tilt += speed
+    if action == 'left':
+        turn += speed
+    if action == 'right':
+        turn -= speed
+
+    packet = Delta(dx=turn, dy=tilt, time=time())
+    servo_pub[TopicNames.servo](packet)
+    print(json, tilt, turn)
+    return JSONResponse({})
 
 
 @app.route('/')
@@ -105,8 +106,11 @@ async def video_feed(request):
 
 
 def launch(*args, workers=4, **kwargs):
+    global servo_pub
+
     print("launching web server")
-    uvicorn.run(app, host='0.0.0.0', port=8000, workers=workers)
+    servo_pub = Topics.start_service(Services.web_server)
+    uvicorn.run(app, host='0.0.0.0', port=8000)
 
 
 @app.on_event('shutdown')

@@ -40,7 +40,7 @@
         document.getElementById(elem).onmousedown = function () {
             if (interval) clearInterval(interval);
             interval = setInterval(function () {
-                postData('', {action: elem});
+                postData('/servo', {action: elem});
             }, 64)
         };
         document.getElementById(elem).onmouseup = function () {

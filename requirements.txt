@@ -10,3 +10,5 @@ starlette
 uvicorn
 aiofiles
 jinja2
+pyserial
+python-multipart
