@@ -11,6 +11,7 @@ CONFIG = dict(
         ),
         dict(
             descriptor='web_server:launch',
+            frame_buffer_name="shm://camera",
             workers=1,
         ),
         dict(
@@ -27,6 +28,26 @@ CONFIG = dict(
             driver="arduino",
         ),
     ],
+    color=[
+        dict(
+            descriptor='camera_opencv:CameraOpenCV',
+            index=0,
+            half_broadcast=False,
+            camera_sleep=0.013,
+            cap_fps=59,
+        ),
+        dict(
+            descriptor='web_server:launch',
+            frame_buffer_name="shm://camera-masked",
+            workers=1,
+        ),
+        dict(
+            descriptor='detector_color:Detector',
+            zoom=1,
+            lower=[29, 60, 56],
+            upper=[81, 144, 173],
+        ),
+    ],
     raspberry=[
         dict(
             # probably other camera provider
@@ -38,6 +59,7 @@ CONFIG = dict(
         ),
         dict(
             descriptor='web_server:launch',
+            frame_buffer_name="shm://camera",
             workers=1,
         ),
         dict(
@@ -64,6 +86,7 @@ CONFIG = dict(
         ),
         dict(
             descriptor='web_server:launch',
+            frame_buffer_name="shm://camera",
             workers=1,
         ),
         dict(

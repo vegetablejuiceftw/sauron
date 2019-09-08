@@ -38,6 +38,8 @@ class Detector:
             self.detection = detection
             self.preserve = 0
             self.detection_pub[TopicNames.detection](DetectionPacket(points=self.detection))
+        else:
+            self.preserve += 1
 
     def detect(self, frame, zoom) -> List[DetectionPosition]:
         # measure processing the lazy way

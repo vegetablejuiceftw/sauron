@@ -19,6 +19,7 @@ app = Starlette(debug=True)
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
 servo_pub = None
+frame_buffer = None
 
 
 # TODO: replace this with websockets
@@ -52,7 +53,7 @@ async def homepage(request):
 
 
 async def generator(request):
-    frame = sa.attach("shm://camera")
+    frame = sa.attach(frame_buffer)
     current = frame.copy()
 
     detection_queue = Topics.start_listener(TopicNames.detection)
@@ -101,9 +102,10 @@ async def video_feed(request):
         return Response('camera not online', 404)
 
 
-def launch(*args, workers=1, **kwargs):
-    global servo_pub
+def launch(*args, frame_buffer_name="shm://camera", workers=1, **kwargs):
+    global servo_pub, frame_buffer
 
+    frame_buffer = frame_buffer_name
     print("launching web server")
     servo_pub = Topics.start_service(Services.web_server)
     uvicorn.run(app, host='0.0.0.0', port=8000, workers=workers)
