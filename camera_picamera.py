@@ -27,34 +27,34 @@ class CameraPicamera(Camera):
         camera.resolution = res
         camera.framerate = fps
 
-        camera.sharpness = 0
-        camera.contrast = 0
-        camera.brightness = 50
-        camera.saturation = 0
-        camera.ISO = 0
-        camera.video_stabilization = False
-        camera.exposure_compensation = 0
-        camera.exposure_mode = 'auto'
-        camera.meter_mode = 'average'
-        camera.awb_mode = 'auto'
-        camera.image_effect = 'none'
-        camera.color_effects = None
-        camera.rotation = 0
+        # camera.sharpness = 0
+        # camera.contrast = 0
+        # camera.brightness = 50
+        # camera.saturation = 0
+        # camera.ISO = 0
+        # camera.video_stabilization = False
+        # camera.exposure_compensation = 0
+        # camera.exposure_mode = 'auto'
+        # camera.meter_mode = 'average'
+        # camera.awb_mode = 'auto'
+        # camera.image_effect = 'none'
+        # camera.color_effects = None
+        # camera.rotation = 0
         camera.hflip = True
         camera.vflip = True
-        camera.crop = (0.0, 0.0, 1.0, 1.0)
-
-        for i in range(10):
-            if camera.analog_gain > 1:
-                break
-            sleep(0.1)
-
-        # Now fix the values
-        camera.shutter_speed = camera.exposure_speed  # 10**6//90#
-        camera.exposure_mode = 'off'
-        g = camera.awb_gains
-        camera.awb_mode = 'off'
-        camera.awb_gains = g
+        # camera.crop = (0.0, 0.0, 1.0, 1.0)
+        #
+        # for i in range(10):
+        #     if camera.analog_gain > 1:
+        #         break
+        #     sleep(0.1)
+        #
+        # # Now fix the values
+        # camera.shutter_speed = camera.exposure_speed  # 10**6//90#
+        # camera.exposure_mode = 'off'
+        # g = camera.awb_gains
+        # camera.awb_mode = 'off'
+        # camera.awb_gains = g
 
     def step(self):
         self.camera.capture(self.output, 'rgb')
