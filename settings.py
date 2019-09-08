@@ -50,8 +50,7 @@ CONFIG = dict(
     ],
     raspberry=[
         dict(
-            # probably other camera provider
-            descriptor='camera_opencv:CameraOpenCV',
+            descriptor='camera_picamera:CameraPicamera',
             index=0,
             half_broadcast=False,
             camera_sleep=0.029,
@@ -65,15 +64,6 @@ CONFIG = dict(
         dict(
             descriptor='detector:Detector',
             zoom=1,
-        ),
-        dict(
-            descriptor='autonomous:Autonomous',
-            autonomous_timeout=1.0,
-        ),
-        dict(
-            descriptor='servo:Servo',
-            timeout=SERVO_TIMEOUT,
-            driver="arduion",  # could use the pan tilt hat, but it has power draw issues :/
         ),
     ],
     image_only=[
