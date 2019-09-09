@@ -26,17 +26,17 @@ def find_serial(name: str) -> dict:
 def info(ports: Dict[str, SysFS]):
     for k, p in ports.items():
         print()
-        print(p.device)
-        print(p.name)
-        print(p.description)
-        print(p.hwid)
-        print(p.vid)
-        print(p.pid)
-        print(p.serial_number)
-        print(p.location)
-        print(p.manufacturer)
-        print(p.product)
-        print(p.interface)
+        print("device:", p.device)
+        print("name:", p.name)
+        print("description:", p.description)
+        print("hwid:", p.hwid)
+        print("vid:", p.vid)
+        print("pid:", p.pid)
+        print("serial_number:", p.serial_number)
+        print("location:", p.location)
+        print("manufacturer:", p.manufacturer)
+        print("product:", p.product)
+        print("interface:", p.interface)
 
 
 if __name__ == '__main__':
