@@ -4,18 +4,22 @@ from time import time, sleep
 from messages import Delta
 from pubsub import Topics, TopicNames, CallbackListener
 
+DEFAULT_TURN = 90
+DEFAULT_TILT = 35
+
 
 class Servo(Thread):
 
-    def __init__(self, driver: str = "arduino", device: str = 'arduino', timeout: float = 20.0, run=True, **kwargs) -> None:
+    def __init__(self, driver: str = "arduino", device: str = 'arduino', timeout: float = 20.0, run=True,
+                 **kwargs) -> None:
         Thread.__init__(self, **kwargs)
 
         self.timeout = timeout
         self.last_update = time()
         self.pwm = self.load_driver(driver, device)
 
-        self.turn: float = 90
-        self.tilt: float = 50
+        self.turn: float = DEFAULT_TURN
+        self.tilt: float = DEFAULT_TILT
 
         self.current_turn: float = self.turn
         self.current_tilt: float = self.tilt
@@ -110,8 +114,8 @@ class Servo(Thread):
                 self.last_update = time()
             elif time() - self.last_update > self.timeout:
                 print("stop")
-                self.current_turn, self.current_tilt = 90, 50
-                self.turn, self.tilt = 90, 50
+                self.current_turn, self.current_tilt = DEFAULT_TURN, DEFAULT_TILT
+                self.turn, self.tilt = DEFAULT_TURN, DEFAULT_TILT
 
                 self.apply()
                 self.pwm_stop()
