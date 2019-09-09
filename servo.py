@@ -30,6 +30,7 @@ class Servo(Thread):
 
         if run:
             self.start()
+            self.apply()
 
     @staticmethod
     def load_driver(name, device):
@@ -109,6 +110,8 @@ class Servo(Thread):
                 self.last_update = time()
             elif time() - self.last_update > self.timeout:
                 print("stop")
+                self.current_turn, self.current_tilt = 90, 50
+                self.apply()
                 self.pwm_stop()
                 self.last_update = time()
 
