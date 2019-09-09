@@ -111,6 +111,8 @@ class Servo(Thread):
             elif time() - self.last_update > self.timeout:
                 print("stop")
                 self.current_turn, self.current_tilt = 90, 50
+                self.turn, self.tilt = 90, 50
+
                 self.apply()
                 self.pwm_stop()
                 self.last_update = time()
