@@ -7,12 +7,12 @@ from pubsub import Topics, TopicNames, CallbackListener
 
 class Servo(Thread):
 
-    def __init__(self, driver: str = "arduino", timeout: float = 20.0, run=True, **kwargs) -> None:
+    def __init__(self, driver: str = "arduino", device: str = 'arduino', timeout: float = 20.0, run=True, **kwargs) -> None:
         Thread.__init__(self, **kwargs)
 
         self.timeout = timeout
         self.last_update = time()
-        self.pwm = self.load_driver(driver)
+        self.pwm = self.load_driver(driver, device)
 
         self.turn: float = 90
         self.tilt: float = 50
@@ -32,7 +32,7 @@ class Servo(Thread):
             self.start()
 
     @staticmethod
-    def load_driver(name):
+    def load_driver(name, device):
         if name == 'pan-tilt-hat':
             # the pan tilt hat has power draw issues :/
             try:
@@ -43,7 +43,7 @@ class Servo(Thread):
         elif name == 'arduino':
             try:
                 from driver_arduino import Controller
-                return Controller()
+                return Controller(descriptor=device)
             except:
                 pass
 

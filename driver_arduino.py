@@ -9,8 +9,9 @@ logger = logging.getLogger("driver_arduino")
 
 
 class Controller:
-    def __init__(self):
+    def __init__(self, descriptor="arduino"):
         self.motor_serial = None
+        self.descriptor = descriptor
         self.try_reconnect()
 
     def try_reconnect(self):
@@ -18,7 +19,7 @@ class Controller:
             self.motor_serial.close()
         self.motor_serial = None
         while self.motor_serial is None:
-            controller_serial = next(iter(find_serial('arduino')), None)
+            controller_serial = next(iter(find_serial(self.descriptor)), None)
             logger.info("Opening %s", controller_serial)
 
             if not controller_serial:

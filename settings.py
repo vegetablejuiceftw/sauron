@@ -4,7 +4,7 @@ CONFIG = dict(
     default=[
         dict(
             descriptor='camera_opencv:CameraOpenCV',
-            index=2,
+            index=0,
             half_broadcast=False,
             camera_sleep=0.013,
             cap_fps=59,
@@ -26,6 +26,7 @@ CONFIG = dict(
             descriptor='servo:Servo',
             timeout=SERVO_TIMEOUT,
             driver="arduino",
+            device="1A86:7523",  # VID:PID, dunno might work : D
         ),
     ],
     color=[
