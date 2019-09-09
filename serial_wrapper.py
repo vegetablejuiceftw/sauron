@@ -41,4 +41,4 @@ def info(ports: Dict[str, SysFS]):
 
 if __name__ == '__main__':
     print("start")
-    info(find_serial('arduino'))
+    info(find_serial(''))
